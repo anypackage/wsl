@@ -1,2 +1,3 @@
-# wsl
-Windows Subsystem for Linux provider for AnyPackage
+# AnyPackage.Wsl
+
+Windows Subsystem for Linux provider for AnyPackage.
