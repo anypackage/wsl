@@ -44,7 +44,10 @@ public class WslProvider : PackageProvider, IFindPackage, IGetPackage
                                               description: match.Groups["friendlyName"].Value,
                                               ProviderInfo);
 
-                request.WritePackage(package);
+                if (request.IsMatch(package.Name))
+                {
+                    request.WritePackage(package);
+                }
             }
         }
     }
