@@ -38,17 +38,10 @@ public class WslProvider : PackageProvider, IFindPackage, IGetPackage
 
             if (match.Success && match.Groups["name"].Value != "NAME")
             {
-                var metadata = new Dictionary<string, object?>
-                {
-                    { "FriendlyName", match.Groups["friendlyName"].Value }
-                };
-
                 var package = new PackageInfo(match.Groups["name"].Value,
                                               version: null,
                                               source: null,
-                                              description: "",
-                                              dependencies: null,
-                                              metadata,
+                                              description: match.Groups["friendlyName"].Value,
                                               ProviderInfo);
 
                 request.WritePackage(package);
