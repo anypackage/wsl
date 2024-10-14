@@ -32,7 +32,7 @@ public class WslProvider : PackageProvider, IGetPackage
 
             if (match.Success)
             {
-                var dict = new Dictionary<string, object?>
+                var metadata = new Dictionary<string, object?>
                 {
                     { "IsDefault", match.Groups["default"].Value == "*" },
                     { "State", match.Groups["state"].Value }
@@ -40,10 +40,10 @@ public class WslProvider : PackageProvider, IGetPackage
 
                 var package = new PackageInfo(match.Groups["name"].Value,
                                               match.Groups["version"].Value,
-                                              null,
-                                              "",
-                                              null,
-                                              dict,
+                                              source: null,
+                                              description: "",
+                                              dependencies: null,
+                                              metadata,
                                               ProviderInfo);
 
                 request.WritePackage(package);
