@@ -82,7 +82,10 @@ public class WslProvider : PackageProvider, IFindPackage, IGetPackage
                                               metadata,
                                               ProviderInfo);
 
-                request.WritePackage(package);
+                if (request.IsMatch(package.Name, package.Version!))
+                {
+                    request.WritePackage(package);
+                }
             }
         }
     }
