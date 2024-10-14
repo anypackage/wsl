@@ -13,6 +13,8 @@ public class WslProvider : PackageProvider, IFindPackage, IGetPackage
 {
     private const string _findRegex = @"^(?<name>\S+)\s{2,}(?<friendlyName>.+)$";
     private const string _getRegex = @"^(?<default>[\*]?)\s+(?<name>\S+)\s+(?<state>\S+)\s+(?<version>\d+)$";
+    private const string _fileName = "wsl";
+    private const string _running = "Running: {0} {1}";
 
     public void FindPackage(PackageRequest request)
     {
@@ -21,12 +23,18 @@ public class WslProvider : PackageProvider, IFindPackage, IGetPackage
             return;
         }
 
+        var args = "--list --online";
+
         using var process = new Process();
-        process.StartInfo.Arguments = "--list --online";
-        process.StartInfo.FileName = "wsl";
+        process.StartInfo.Arguments = args;
+        process.StartInfo.FileName = _fileName;
         process.StartInfo.CreateNoWindow = true;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.StandardOutputEncoding = Encoding.Unicode;
+
+        var message = string.Format(_running, _fileName, args);
+        request.WriteVerbose(message);
+
         process.Start();
         using var reader = process.StandardOutput;
 
@@ -54,12 +62,18 @@ public class WslProvider : PackageProvider, IFindPackage, IGetPackage
 
     public void GetPackage(PackageRequest request)
     {
+        var args = "--list --online";
+
         using var process = new Process();
-        process.StartInfo.Arguments = "--list --verbose";
-        process.StartInfo.FileName = "wsl";
+        process.StartInfo.Arguments = args;
+        process.StartInfo.FileName = _fileName;
         process.StartInfo.CreateNoWindow = true;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.StandardOutputEncoding = Encoding.Unicode;
+
+        var message = string.Format(_running, _fileName, args);
+        request.WriteVerbose(message);
+
         process.Start();
         using var reader = process.StandardOutput;
 
