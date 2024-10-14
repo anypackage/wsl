@@ -24,6 +24,8 @@ public class WslProvider : PackageProvider, IFindPackage, IGetPackage
         }
 
         var args = "--list --online";
+        var message = string.Format(_running, _fileName, args);
+        request.WriteVerbose(message);
 
         using var process = new Process();
         process.StartInfo.Arguments = args;
@@ -31,10 +33,6 @@ public class WslProvider : PackageProvider, IFindPackage, IGetPackage
         process.StartInfo.CreateNoWindow = true;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.StandardOutputEncoding = Encoding.Unicode;
-
-        var message = string.Format(_running, _fileName, args);
-        request.WriteVerbose(message);
-
         process.Start();
         using var reader = process.StandardOutput;
 
@@ -63,6 +61,8 @@ public class WslProvider : PackageProvider, IFindPackage, IGetPackage
     public void GetPackage(PackageRequest request)
     {
         var args = "--list --online";
+        var message = string.Format(_running, _fileName, args);
+        request.WriteVerbose(message);
 
         using var process = new Process();
         process.StartInfo.Arguments = args;
@@ -70,10 +70,6 @@ public class WslProvider : PackageProvider, IFindPackage, IGetPackage
         process.StartInfo.CreateNoWindow = true;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.StandardOutputEncoding = Encoding.Unicode;
-
-        var message = string.Format(_running, _fileName, args);
-        request.WriteVerbose(message);
-
         process.Start();
         using var reader = process.StandardOutput;
 
