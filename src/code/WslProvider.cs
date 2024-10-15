@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 namespace AnyPackage.Provider.Wsl;
 
 [PackageProvider("Wsl")]
-public class WslProvider : PackageProvider, IFindPackage, IGetPackage, IInstallPackage
+public class WslProvider : PackageProvider, IFindPackage, IGetPackage, IInstallPackage, IUninstallPackage
 {
     private const string _findRegex = @"^(?<name>\S+)\s{2,}(?<friendlyName>.+)$";
     private const string _getRegex = @"^(?<default>[\*]?)\s+(?<name>\S+)\s+(?<state>\S+)\s+(?<version>\d+)$";
@@ -126,6 +126,52 @@ public class WslProvider : PackageProvider, IFindPackage, IGetPackage, IInstallP
         if (process.ExitCode == 0)
         {
             request.WriteWarning($"To complete installation run 'wsl --install {request.Name}'");
+            request.WritePackage(package);
+        }
+    }
+
+    public void UninstallPackage(PackageRequest request)
+    {
+        if (request.Package is not null)
+        {
+            UninstallPackage(request.Package, request);
+        }
+        else
+        {
+            using var powershell = PowerShell.Create(RunspaceMode.CurrentRunspace);
+
+            powershell.AddCommand("Get-Package")
+                      .AddParameter("Name", request.Name)
+                      .AddParameter("Provider", ProviderInfo.FullName);
+
+            if (request.Version is not null)
+            {
+                powershell.AddParameter("Version", request.Version);
+            }
+
+            foreach (var package in powershell.Invoke<PackageInfo>())
+            {
+                UninstallPackage(package, request);
+            }
+        }
+    }
+
+    private static void UninstallPackage(PackageInfo package, PackageRequest request)
+    {
+        using var process = new Process();
+        process.StartInfo = GetStartInfo($"--unregister {package.Name}", request);
+        process.Start();
+        using var reader = process.StandardOutput;
+
+        string line;
+
+        while ((line = reader.ReadLine()) is not null)
+        {
+            request.WriteVerbose(line);
+        }
+
+        if (process.ExitCode == 0)
+        {
             request.WritePackage(package);
         }
     }
