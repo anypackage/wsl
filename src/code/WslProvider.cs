@@ -3,13 +3,14 @@
 // terms of the MIT license.
 
 using System.Diagnostics;
+using System.Management.Automation;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace AnyPackage.Provider.Wsl;
 
 [PackageProvider("Wsl")]
-public class WslProvider : PackageProvider, IFindPackage, IGetPackage
+public class WslProvider : PackageProvider, IFindPackage, IGetPackage, IInstallPackage
 {
     private const string _findRegex = @"^(?<name>\S+)\s{2,}(?<friendlyName>.+)$";
     private const string _getRegex = @"^(?<default>[\*]?)\s+(?<name>\S+)\s+(?<state>\S+)\s+(?<version>\d+)$";
@@ -84,6 +85,48 @@ public class WslProvider : PackageProvider, IFindPackage, IGetPackage
                     request.WritePackage(package);
                 }
             }
+        }
+    }
+
+    public void InstallPackage(PackageRequest request)
+    {
+        PackageInfo package;
+
+        if (request.ParameterSetName == "Name")
+        {
+            package = PowerShell.Create(RunspaceMode.CurrentRunspace)
+                                .AddCommand("Find-Package")
+                                .AddParameter("Name", request.Name)
+                                .AddParameter("Provider", ProviderInfo.FullName)
+                                .Invoke<PackageInfo>()
+                                .FirstOrDefault();
+
+            if (package is null)
+            {
+                return;
+            }
+        }
+        else
+        {
+            package = request.Package!;
+        }
+
+        using var process = new Process();
+        process.StartInfo = GetStartInfo($"--install {package.Name} --no-launch", request);
+        process.Start();
+        using var reader = process.StandardOutput;
+
+        string line;
+
+        while ((line = reader.ReadLine()) is not null)
+        {
+            request.WriteVerbose(line);
+        }
+
+        if (process.ExitCode == 0)
+        {
+            request.WriteWarning($"To complete installation run 'wsl --install {request.Name}'");
+            request.WritePackage(package);
         }
     }
 
