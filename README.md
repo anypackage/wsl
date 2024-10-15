@@ -46,7 +46,7 @@ Get-Package -Name *Ubuntu*
 > Linux username and password.
 
 ```powershell
-Install-Package -Name *Ubuntu*
+Install-Package -Name Ubuntu
 ```
 
 ### Uninstall distribution
