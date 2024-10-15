@@ -90,27 +90,43 @@ public class WslProvider : PackageProvider, IFindPackage, IGetPackage, IInstallP
 
     public void InstallPackage(PackageRequest request)
     {
+        if (request.IsVersionFiltered)
+        {
+            return;
+        }
+
         PackageInfo package;
 
-        if (request.ParameterSetName == "Name")
+        if (request.Package is not null)
         {
-            package = PowerShell.Create(RunspaceMode.CurrentRunspace)
-                                .AddCommand("Find-Package")
-                                .AddParameter("Name", request.Name)
-                                .AddParameter("Provider", ProviderInfo.FullName)
-                                .Invoke<PackageInfo>()
-                                .FirstOrDefault();
+            package = request.Package;
+        }
+        else
+        {
+            using var powershell = PowerShell.Create(RunspaceMode.CurrentRunspace);
+
+            powershell.AddCommand("Find-Package")
+                      .AddParameter("Name", request.Name)
+                      .AddParameter("Provider", ProviderInfo.FullName);
+
+            if (request.Version is not null)
+            {
+                powershell.AddParameter("Version", request.Version);
+            }
+
+            package = powershell.Invoke<PackageInfo>().FirstOrDefault();
 
             if (package is null)
             {
                 return;
             }
         }
-        else
-        {
-            package = request.Package!;
-        }
 
+        InstallPackage(package, request);
+    }
+
+    private static void InstallPackage(PackageInfo package, PackageRequest request)
+    {
         using var process = new Process();
         process.StartInfo = GetStartInfo($"--install {package.Name} --no-launch", request);
         process.Start();
